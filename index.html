@@ -1,0 +1,203 @@
+<html><head><base href="https://www.stimlig.com/indoor-plants-decor/"></head><body>
+當然可以。我將修改左邊控制面板的顏色為淺棕色。我們將更新 CSS 樣式和一些 HTML 結構來實現這個效果。以下是更新後的代碼：
+
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>線性回歸模擬器 - 葉子主題</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/regression/2.0.1/regression.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Serif TC', serif;
+            background-color: #f9f7f5;
+            color: #4a6741;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            display: flex;
+            justify-content: space-between;
+        }
+        .panel {
+            width: 48%;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .panel-left {
+            background-color: #e6d8cc; /* 淺棕色背景 */
+        }
+        h1 {
+            font-family: 'Playfair Display', serif;
+            color: #4a6741;
+            text-align: center;
+        }
+        .slider-container {
+            margin-bottom: 20px;
+        }
+        input[type="range"] {
+            width: 100%;
+            -webkit-appearance: none;
+            background: #d1c3b7; /* 更深的棕色作為滑動條背景 */
+            outline: none;
+            border-radius: 15px;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 25px;
+            height: 25px;
+            background: #8b7b6b; /* 深棕色滑塊 */
+            cursor: pointer;
+            border-radius: 50%;
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 25px;
+            height: 25px;
+            background: #8b7b6b;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+        #results {
+            margin-top: 20px;
+        }
+        .result-item {
+            margin-bottom: 10px;
+        }
+        .result-label {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>線性回歸模擬器 - 葉子主題</h1>
+    <div class="container">
+        <div class="panel panel-left">
+            <div class="slider-container">
+                <label for="slope">斜率 (a): <span id="slope-value">1</span></label>
+                <input type="range" id="slope" min="-10" max="10" step="0.1" value="1">
+            </div>
+            <div class="slider-container">
+                <label for="intercept">截距 (b): <span id="intercept-value">0</span></label>
+                <input type="range" id="intercept" min="-10" max="10" step="0.1" value="0">
+            </div>
+            <div class="slider-container">
+                <label for="num-points">點的數量 (n): <span id="num-points-value">100</span></label>
+                <input type="range" id="num-points" min="10" max="1000" step="10" value="100">
+            </div>
+            <div class="slider-container">
+                <label for="noise">噪聲因子 (c): <span id="noise-value">1</span></label>
+                <input type="range" id="noise" min="0" max="5" step="0.1" value="1">
+            </div>
+        </div>
+        <div class="panel">
+            <div id="plot"></div>
+            <div id="results"></div>
+        </div>
+    </div>
+
+    <script>
+        const leafPath = 'M0 0 C 10 10, 20 10, 30 0 S 40 -10, 50 -20 L 30 -15 A 30 30 0 0 1 0 0';
+
+        function generateData(n, a, b, c) {
+            const x = Array.from({length: n}, () => Math.random() * 9 + 1);
+            const y = x.map(xi => a * xi + b + c * (Math.random() + Math.random() + Math.random() - 1.5));
+            return [x, y];
+        }
+
+        function updatePlot() {
+            const a = parseFloat(document.getElementById('slope').value);
+            const b = parseFloat(document.getElementById('intercept').value);
+            const n = parseInt(document.getElementById('num-points').value);
+            const c = parseFloat(document.getElementById('noise').value);
+
+            const [x, y] = generateData(n, a, b, c);
+            
+            const result = regression.linear(x.map((xi, i) => [xi, y[i]]));
+            const m = result.equation[0];
+            const intercept = result.equation[1];
+            const r2 = result.r2;
+
+            const trace1 = {
+                x: x,
+                y: y,
+                mode: 'markers',
+                type: 'scatter',
+                name: '數據點',
+                marker: { 
+                    color: '#879e82',
+                    symbol: 'path',
+                    path: leafPath,
+                    size: 15,
+                    opacity: 0.7
+                }
+            };
+
+            const trace2 = {
+                x: [Math.min(...x), Math.max(...x)],
+                y: [m * Math.min(...x) + intercept, m * Math.max(...x) + intercept],
+                mode: 'lines',
+                type: 'scatter',
+                name: '回歸線',
+                line: {color: '#4a6741', width: 3}
+            };
+
+            const layout = {
+                title: {
+                    text: `線性回歸 (n=${n}, a=${a.toFixed(2)}, b=${b.toFixed(2)}, c=${c.toFixed(2)})`,
+                    font: {
+                        family: 'Playfair Display, serif',
+                        size: 24,
+                        color: '#4a6741'
+                    }
+                },
+                xaxis: {title: 'X'},
+                yaxis: {title: 'Y'},
+                font: { family: 'Noto Serif TC, serif' },
+                plot_bgcolor: '#f9f7f5',
+                paper_bgcolor: '#f9f7f5'
+            };
+
+            Plotly.newPlot('plot', [trace1, trace2], layout);
+
+            document.getElementById('results').innerHTML = `
+                <div class="result-item"><span class="result-label">真實斜率 (a):</span> ${a.toFixed(4)}</div>
+                <div class="result-item"><span class="result-label">估計斜率:</span> ${m.toFixed(4)}</div>
+                <div class="result-item"><span class="result-label">真實截距 (b):</span> ${b.toFixed(4)}</div>
+                <div class="result-item"><span class="result-label">估計截距:</span> ${intercept.toFixed(4)}</div>
+                <div class="result-item"><span class="result-label">R平方分數:</span> ${r2.toFixed(4)}</div>
+            `;
+        }
+
+        ['slope', 'intercept', 'num-points', 'noise'].forEach(id => {
+            const slider = document.getElementById(id);
+            const valueSpan = document.getElementById(`${id}-value`);
+            slider.addEventListener('input', () => {
+                valueSpan.textContent = slider.value;
+                updatePlot();
+            });
+        });
+
+        updatePlot();
+    </script>
+</body>
+</html>
+
+主要的變化包括：
+
+1. 在 CSS 中添加了 `.panel-left` 類，設置背景色為淺棕色 (#e6d8cc)。
+
+2. 修改了滑動條的樣式，使用了更深的棕色作為背景 (#d1c3b7)，深棕色作為滑塊 (#8b7b6b)。
+
+3. 在左側面板的 div 中添加了 `panel-left` 類。
+
+這些修改使得左側控制面板呈現出淺棕色的外觀，與整體的植物主題更加協調。滑動條的顏色也相應地調整為棕色系，以保持視覺的一致性。
+
+你可以將這段代碼保存為 HTML 文件並在瀏覽器中打開，就能看到更新後的效果了。左側的控制面板現在應該呈現出淺棕色的外觀，而滑動條也會有棕色的風格。
+
+</body></html>
